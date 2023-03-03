@@ -1,6 +1,9 @@
 <script lang="ts">
-	import { currentStep, loadSamples, playerStore, togglePlay } from './stores/PlayerStore';
+	import { sequencerStore } from './stores/SequencerStore';
+	import { currentStep, playerStore, togglePlay } from './stores/PlayerStore';
 
+	$sequencerStore;
+	$currentStep;
 </script>
 
 <div>

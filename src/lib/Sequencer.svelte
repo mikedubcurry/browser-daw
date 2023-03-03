@@ -1,9 +1,9 @@
 <script lang="ts">
-  import {currentStep, playerStore} from './stores/PlayerStore'
+	import { sequencerStore } from './stores/SequencerStore';
+	import { currentStep, playerStore } from './stores/PlayerStore';
+	import { debug } from 'svelte/internal';
 	export let samples = ['open-hat', 'closed-hat', 'snare', 'kick'];
-	export let steps = Array.from(Array(16)).map(() =>
-		Array.from(Array(samples.length)).map(() => 0)
-	);
+
 </script>
 
 <section>
@@ -13,10 +13,14 @@
 				<span>{sample}</span>
 			{/each}
 		</div>
-		{#each steps as step, i}
-      <div class="step" class:active={i === $currentStep && $playerStore.playing} class:beat={i % 4 === 0}>
-				{#each step as state}
-					<input type="checkbox" checked={state ? true : false} />
+		{#each $sequencerStore.steps as step, i}
+			<div
+				class="step"
+				class:active={i === $currentStep && $playerStore.playing}
+				class:beat={i % 4 === 0}
+			>
+				{#each step as stepState, j}
+					<input type="checkbox" bind:checked={$sequencerStore.steps[i][j].state}/>
 				{/each}
 			</div>
 		{/each}
@@ -37,17 +41,17 @@
 		gap: 1rem;
 	}
 
-  .active.active {
-    border: solid 1px blue;
-    accent-color: rebeccapurple;
-  }
+	.active.active {
+		border: solid 1px blue;
+		accent-color: rebeccapurple;
+	}
 
 	.step {
 		display: flex;
-		flex-direction: column;
+		flex-direction: column-reverse;
 		gap: 1rem;
-    border: solid 1px transparent;
-    accent-color: #999;
+		border: solid 1px transparent;
+		accent-color: #999;
 	}
 
 	.beat {

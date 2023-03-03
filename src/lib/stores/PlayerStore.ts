@@ -1,34 +1,48 @@
 import { derived, get, writable } from 'svelte/store';
+import {Conductor} from './audio/Conductor'
+import { sequencerStore } from './SequencerStore';
+import {samples } from './samples'
+export type SampleMap = {
+	[sample: string]: AudioBuffer;
+};
 
 export type PlayerState = {
 	playing: boolean;
 	context: AudioContext | null;
 	bpm: number;
-  samples: {
-    [sample: string]: AudioBuffer
-  }
+	samples: SampleMap;
 };
 
-const samples = ['kick',  'snare', 'closed-hat', 'open-hat'];
+export type SampleResponse = [string, AudioBuffer][];
 
-export const loadSamples = async () => {
-  samples.forEach(async sample => {
-    const response = await fetch(`/samples/${sample}.wav`);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await get(playerStore).context.decodeAudioData(arrayBuffer);
-    playerStore.update(p => {
-      return {...p, samples: {...p.samples, [sample]: audioBuffer}}
-    })
-  }) 
-}
 
-export const playerStore = writable<PlayerState>({ playing: false, context: null, bpm: 140, samples: {} },  () => {
+export const loadSamples = async (): Promise<SampleResponse> => {
+	return await Promise.all(
+		samples.map(async (sample) => {
+			const response = await fetch(`/samples/${sample}.wav`);
+			const arrayBuffer = await response.arrayBuffer();
+			const audioBuffer = await get(playerStore).context!.decodeAudioData(arrayBuffer);
+			return [sample, audioBuffer];
+		})
+	);
+};
 
-  playerStore.update(p => ({...p, context: new AudioContext()}))
-  loadSamples().then(() => {
+export const playerStore = writable<PlayerState>(
+	{ playing: false, context: null, bpm: 140, samples: {} },
+	() => {
+		playerStore.update((p) => ({ ...p, context: new AudioContext() }));
+		loadSamples().then((samples) => {
+			samples.forEach(([name, buffer]) => {
+				playerStore.update((p) => {
+					return { ...p, samples: { ...p.samples, [name]: buffer } };
+				});
+			});
+		});
+	}
+);
 
-  })
-});
+
+let conductor;
 
 export const togglePlay = () => {
 	playerStore.update((p) => ({ ...p, playing: !p.playing }));
@@ -55,14 +69,21 @@ const bpmToMs = (bpm: number) => {
 	return 60000 / bpm / 4;
 };
 
-export const currentStep = derived(playerStore, ({ playing, bpm }, set) => {
+export const currentStep = derived([playerStore, sequencerStore], ([{ playing, context, samples, bpm,  }, {steps}], set) => {
+  if(!conductor) {
+    conductor = new Conductor(context, samples)
+  }
 	if (playing) {
 		clearTimers();
 		set(beatIndex);
+    conductor.playBeat(steps[beatIndex])
+		console.log('playing note');
 		timers.push(
 			setInterval(() => {
 				nextBeat();
 				set(beatIndex);
+    conductor.playBeat(steps[beatIndex])
+				console.log('playing note');
 			}, bpmToMs(bpm))
 		);
 	} else {
