@@ -1,7 +1,7 @@
 import { derived, get, writable } from 'svelte/store';
-import {Conductor} from './audio/Conductor'
+import { Conductor } from './audio/Conductor';
 import { sequencerStore } from './SequencerStore';
-import {samples } from './samples'
+import { samples } from './samples';
 export type SampleMap = {
 	[sample: string]: AudioBuffer;
 };
@@ -14,7 +14,6 @@ export type PlayerState = {
 };
 
 export type SampleResponse = [string, AudioBuffer][];
-
 
 export const loadSamples = async (): Promise<SampleResponse> => {
 	return await Promise.all(
@@ -41,8 +40,7 @@ export const playerStore = writable<PlayerState>(
 	}
 );
 
-
-let conductor;
+let conductor: Conductor;
 
 export const togglePlay = () => {
 	playerStore.update((p) => ({ ...p, playing: !p.playing }));
@@ -69,26 +67,27 @@ const bpmToMs = (bpm: number) => {
 	return 60000 / bpm / 4;
 };
 
-export const currentStep = derived([playerStore, sequencerStore], ([{ playing, context, samples, bpm,  }, {steps}], set) => {
-  if(!conductor) {
-    conductor = new Conductor(context, samples)
-  }
-	if (playing) {
-		clearTimers();
-		set(beatIndex);
-    conductor.playBeat(steps[beatIndex])
-		console.log('playing note');
-		timers.push(
-			setInterval(() => {
-				nextBeat();
-				set(beatIndex);
-    conductor.playBeat(steps[beatIndex])
-				console.log('playing note');
-			}, bpmToMs(bpm))
-		);
-	} else {
-		beatIndex = 0;
-		set(0);
-		clearTimers();
+export const currentStep = derived(
+	[playerStore, sequencerStore],
+	([{ playing, context, samples, bpm }, { patterns, currentPattern }], set) => {
+		if (!conductor && context && Object.keys(samples).length === 4) {
+			conductor = new Conductor(context, samples);
+		}
+		if (conductor && playing) {
+			clearTimers();
+			set(beatIndex);
+			conductor.playBeat(patterns[currentPattern].pattern[beatIndex]);
+			timers.push(
+				setInterval(() => {
+					nextBeat();
+					set(beatIndex);
+					conductor.playBeat(patterns[currentPattern].pattern[beatIndex]);
+				}, bpmToMs(bpm))
+			);
+		} else {
+			beatIndex = 0;
+			set(0);
+			clearTimers();
+		}
 	}
-});
+);
