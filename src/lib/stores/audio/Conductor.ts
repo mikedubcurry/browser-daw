@@ -7,8 +7,8 @@ export class Conductor {
 	private nodes: {
 		[sample: string]: AudioBufferSourceNode;
 	};
-	constructor(context: AudioContext, samples: SampleMap) {
-		this.context = context;
+	constructor(samples: SampleMap) {
+		this.context = new AudioContext();
 		this.samples = samples;
 		this.nodes = Object.keys(samples).reduce((nodes, sample) => {
 			nodes[sample] = new AudioBufferSourceNode(this.context, { buffer: this.samples[sample] });

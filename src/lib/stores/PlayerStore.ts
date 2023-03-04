@@ -1,14 +1,14 @@
-import { derived, get, writable } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 import { Conductor } from './audio/Conductor';
 import { sequencerStore } from './SequencerStore';
 import { samples } from './samples';
+import { browser } from '$app/environment';
 export type SampleMap = {
 	[sample: string]: AudioBuffer;
 };
 
 export type PlayerState = {
 	playing: boolean;
-	context: AudioContext | null;
 	bpm: number;
 	samples: SampleMap;
 };
@@ -16,20 +16,21 @@ export type PlayerState = {
 export type SampleResponse = [string, AudioBuffer][];
 
 export const loadSamples = async (): Promise<SampleResponse> => {
+  const context = new AudioContext();
 	return await Promise.all(
 		samples.map(async (sample) => {
 			const response = await fetch(`/samples/${sample}.wav`);
 			const arrayBuffer = await response.arrayBuffer();
-			const audioBuffer = await get(playerStore).context!.decodeAudioData(arrayBuffer);
+			const audioBuffer = await context.decodeAudioData(arrayBuffer);
 			return [sample, audioBuffer];
 		})
 	);
 };
 
 export const playerStore = writable<PlayerState>(
-	{ playing: false, context: null, bpm: 140, samples: {} },
+	{ playing: false, bpm: 140, samples: {} },
 	() => {
-		playerStore.update((p) => ({ ...p, context: new AudioContext() }));
+    if(browser)
 		loadSamples().then((samples) => {
 			samples.forEach(([name, buffer]) => {
 				playerStore.update((p) => {
@@ -69,9 +70,9 @@ const bpmToMs = (bpm: number) => {
 
 export const currentStep = derived(
 	[playerStore, sequencerStore],
-	([{ playing, context, samples, bpm }, { patterns, currentPattern }], set) => {
-		if (!conductor && context && Object.keys(samples).length === 4) {
-			conductor = new Conductor(context, samples);
+	([{ playing, samples, bpm }, { patterns, currentPattern }], set) => {
+		if (!conductor && Object.keys(samples).length === 4) {
+			conductor = new Conductor(samples);
 		}
 		if (conductor && playing) {
 			clearTimers();
