@@ -2,7 +2,7 @@
 	import { sequencerStore } from './stores/SequencerStore';
 	import { currentStep, playerStore, togglePlay } from './stores/PlayerStore';
 
-	$sequencerStore;
+	console.log($sequencerStore);
 	$currentStep;
 </script>
 
