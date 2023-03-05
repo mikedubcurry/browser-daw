@@ -1,4 +1,5 @@
 import { derived, get, writable } from 'svelte/store';
+import { browser } from '$app/environment';
 import { Conductor } from './audio/Conductor';
 import { sequencerStore } from './SequencerStore';
 import { samples } from './samples';
@@ -11,7 +12,6 @@ export type Mode = 'song' | 'loop';
 
 export type PlayerState = {
 	playing: boolean;
-	context: AudioContext | null;
 	bpm: number;
 	samples: SampleMap;
   mode: Mode;
@@ -20,29 +20,20 @@ export type PlayerState = {
 export type SampleResponse = [string, AudioBuffer][];
 
 export const loadSamples = async (): Promise<SampleResponse> => {
-<<<<<<< Updated upstream
-=======
 	const context = new AudioContext();
->>>>>>> Stashed changes
+
 	return await Promise.all(
 		samples.map(async (sample) => {
 			const response = await fetch(`/samples/${sample}.wav`);
 			const arrayBuffer = await response.arrayBuffer();
-			const audioBuffer = await get(playerStore).context!.decodeAudioData(arrayBuffer);
+			const audioBuffer = await context.decodeAudioData(arrayBuffer);
 			return [sample, audioBuffer];
 		})
 	);
 };
 
-<<<<<<< Updated upstream
-export const playerStore = writable<PlayerState>(
-	{ playing: false, context: null, bpm: 140, samples: {} },
-	() => {
-		playerStore.update((p) => ({ ...p, context: new AudioContext() }));
-=======
 export const playerStore = writable<PlayerState>({ playing: false, bpm: 140, samples: {}, mode: 'loop' }, () => {
 	if (browser)
->>>>>>> Stashed changes
 		loadSamples().then((samples) => {
 			samples.forEach(([name, buffer]) => {
 				playerStore.update((p) => {
@@ -81,17 +72,11 @@ const bpmToMs = (bpm: number) => {
 
 export const currentStep = derived(
 	[playerStore, sequencerStore],
-<<<<<<< Updated upstream
-	([{ playing, context, samples, bpm }, { patterns, currentPattern }], set) => {
-		if (!conductor && context && Object.keys(samples).length === 4) {
-			conductor = new Conductor(context, samples);
-=======
 	([{ playing, samples, bpm, mode }, { patterns, currentPattern }], set) => {
 		if (!conductor && Object.keys(samples).length === 4) {
 			conductor = new Conductor(samples);
->>>>>>> Stashed changes
 		}
-    let playingLoopMode = playing && mode === 'loop'
+    const playingLoopMode = playing && mode === 'loop'
 		if (conductor && playingLoopMode) {
 			clearTimers();
 			set(beatIndex);
