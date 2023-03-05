@@ -6,16 +6,24 @@ export type SampleMap = {
 	[sample: string]: AudioBuffer;
 };
 
+// TODO: implement song mode
+export type Mode = 'song' | 'loop';
+
 export type PlayerState = {
 	playing: boolean;
 	context: AudioContext | null;
 	bpm: number;
 	samples: SampleMap;
+  mode: Mode;
 };
 
 export type SampleResponse = [string, AudioBuffer][];
 
 export const loadSamples = async (): Promise<SampleResponse> => {
+<<<<<<< Updated upstream
+=======
+	const context = new AudioContext();
+>>>>>>> Stashed changes
 	return await Promise.all(
 		samples.map(async (sample) => {
 			const response = await fetch(`/samples/${sample}.wav`);
@@ -26,10 +34,15 @@ export const loadSamples = async (): Promise<SampleResponse> => {
 	);
 };
 
+<<<<<<< Updated upstream
 export const playerStore = writable<PlayerState>(
 	{ playing: false, context: null, bpm: 140, samples: {} },
 	() => {
 		playerStore.update((p) => ({ ...p, context: new AudioContext() }));
+=======
+export const playerStore = writable<PlayerState>({ playing: false, bpm: 140, samples: {}, mode: 'loop' }, () => {
+	if (browser)
+>>>>>>> Stashed changes
 		loadSamples().then((samples) => {
 			samples.forEach(([name, buffer]) => {
 				playerStore.update((p) => {
@@ -37,8 +50,7 @@ export const playerStore = writable<PlayerState>(
 				});
 			});
 		});
-	}
-);
+});
 
 let conductor: Conductor;
 
@@ -69,11 +81,18 @@ const bpmToMs = (bpm: number) => {
 
 export const currentStep = derived(
 	[playerStore, sequencerStore],
+<<<<<<< Updated upstream
 	([{ playing, context, samples, bpm }, { patterns, currentPattern }], set) => {
 		if (!conductor && context && Object.keys(samples).length === 4) {
 			conductor = new Conductor(context, samples);
+=======
+	([{ playing, samples, bpm, mode }, { patterns, currentPattern }], set) => {
+		if (!conductor && Object.keys(samples).length === 4) {
+			conductor = new Conductor(samples);
+>>>>>>> Stashed changes
 		}
-		if (conductor && playing) {
+    let playingLoopMode = playing && mode === 'loop'
+		if (conductor && playingLoopMode) {
 			clearTimers();
 			set(beatIndex);
 			conductor.playBeat(patterns[currentPattern].pattern[beatIndex]);
@@ -89,5 +108,13 @@ export const currentStep = derived(
 			set(0);
 			clearTimers();
 		}
+
+    return () => {
+      clearTimers();
+    }
 	}
 );
+
+export const conductorStore = derived([currentStep], ([store], set) => {
+	console.log(store);
+});

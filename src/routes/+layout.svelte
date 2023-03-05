@@ -1,4 +1,2 @@
-<script>
-  export const prerender =false;
-</script>
+<h1>Browser Daw</h1>
 <slot />

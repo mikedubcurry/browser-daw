@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Sequencer from '$lib/Sequencer.svelte';
 	import TabBar from '$lib/TabBar.svelte';
 	import Tab from '$lib/Tab.svelte';
-  import Player from '$lib/Player.svelte';
+	import Sequencer from '$lib/sequencer/Sequencer.svelte';
+	import Player from '$lib/player/Player.svelte';
+	import Timeline from '$lib/timeline/Timeline.svelte';
+  import Mixer from '$lib/mixer/Mixer.svelte'
 </script>
-
-<h1>Browser Daw</h1>
 
 <Player />
 
@@ -14,9 +14,12 @@
 		<Sequencer />
 	</Tab>
 	<Tab slot="mixer">
-		<div>Mixer</div>
+    <Mixer />
 	</Tab>
 	<Tab slot="synth">
 		<div>Synth</div>
+	</Tab>
+	<Tab slot="timeline">
+		<Timeline />
 	</Tab>
 </TabBar>
