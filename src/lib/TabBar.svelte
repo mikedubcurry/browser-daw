@@ -3,7 +3,7 @@
 	import { tabStore } from './stores/TabStore';
 	import type { Tab as Ttab } from './stores/TabStore';
 
-	const tabs: Ttab[] = ['sequencer', 'mixer', 'synth'];
+	const tabs: Ttab[] = ['sequencer', 'mixer', 'synth', 'timeline'];
 	$: currentTab = $tabStore;
 </script>
 
@@ -21,4 +21,7 @@
 {/if}
 {#if currentTab === 'synth'}
 	<slot name="synth" />
+{/if}
+{#if currentTab === 'timeline'}
+	<slot name="timeline" />
 {/if}

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { sequencerStore, newPattern } from './stores/SequencerStore';
-	import { currentStep, playerStore } from './stores/PlayerStore';
-	import Dropdown from './Dropdown.svelte';
+	import { sequencerStore, newPattern } from '$lib/stores/SequencerStore';
+	import { currentStep, playerStore } from '$lib/stores/PlayerStore';
+	import Dropdown from '$lib/Dropdown.svelte';
 	export let samples = ['open-hat', 'closed-hat', 'snare', 'kick'];
 
   $: patternList = $sequencerStore.patterns.map((p, i) => ({item: p.name, id: i}));
